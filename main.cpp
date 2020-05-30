@@ -109,7 +109,7 @@ struct naive_function<ReturnValue ( Args... )> {
         return *this;
     }
 
-    [[nodiscard]] ReturnValue operator( ) ( Args... args ) const { return callable_->invoke ( std::forward<Args> ( args )... ); }
+    [[nodiscard]] ReturnValue operator( ) ( Args &&... args ) const { return callable_->invoke ( std::forward<Args> ( args )... ); }
 
     struct invoke_callable {
         inline virtual ~invoke_callable ( )    = default;
@@ -120,7 +120,7 @@ struct naive_function<ReturnValue ( Args... )> {
     struct callable_type : public invoke_callable {
         callable_type ( T && t ) : t_ ( std::move ( t ) ) {}
         ~callable_type ( ) override = default;
-        ReturnValue invoke ( Args... args ) override { return t_ ( std::forward<Args> ( args )... ); }
+        ReturnValue invoke ( Args &&... args ) override { return t_ ( std::forward<Args> ( args )... ); }
         T t_;
     };
 
