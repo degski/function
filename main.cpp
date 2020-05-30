@@ -115,13 +115,13 @@ struct function<ReturnValue ( Args... )> {
         return callable_->operator( ) ( std::forward<Args> ( args_ )... );
     }
 
-    struct invoke_callable {
-        inline virtual ~invoke_callable ( )            = 0;
+    struct call {
+        inline virtual ~call ( )                       = 0;
         virtual ReturnValue operator( ) ( Args &&... ) = 0;
     };
 
     template<typename T>
-    struct callable_type : public invoke_callable {
+    struct callable_type : public call {
         callable_type ( T && t_ ) noexcept : t ( std::move ( t_ ) ) {}
         ~callable_type ( ) override = default;
         virtual ReturnValue operator( ) ( Args &&... args ) override { return t ( std::forward<Args> ( args )... ); }
@@ -137,11 +137,11 @@ struct function<ReturnValue ( Args... )> {
         p_->~U ( );
     }
 
-    std::unique_ptr<invoke_callable> callable_;
+    std::unique_ptr<call> callable_;
 };
 
 template<typename ReturnValue, typename... Args>
-inline function<ReturnValue ( Args... )>::invoke_callable::~invoke_callable ( ){ };
+inline function<ReturnValue ( Args... )>::call::~call ( ){ };
 
 } // namespace sax
 
