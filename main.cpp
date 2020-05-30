@@ -105,14 +105,11 @@ struct naive_function<ReturnValue ( Args... )> {
 
     template<typename T>
     [[maybe_unused]] naive_function & operator= ( T && t ) noexcept {
-        callable_ = std::make_unique<callable_type<T>> ( std::forward<T> ( t ) );
+        callable_ = std::make_unique<callable_type<T>> ( std::move ( t ) );
         return *this;
     }
 
-    [[nodiscard]] ReturnValue operator( ) ( Args... args ) const {
-        assert ( callable_ );
-        return callable_->invoke ( std::forward<Args> ( args )... );
-    }
+    [[nodiscard]] ReturnValue operator( ) ( Args... args ) const { return callable_->invoke ( std::forward<Args> ( args )... ); }
 
     struct invoke_callable {
         inline virtual ~invoke_callable ( )    = default;
@@ -121,7 +118,7 @@ struct naive_function<ReturnValue ( Args... )> {
 
     template<typename T>
     struct callable_type : public invoke_callable {
-        callable_type ( T const & t ) : t_ ( t ) {}
+        callable_type ( T && t ) : t_ ( std::move ( t ) ) {}
         ~callable_type ( ) override = default;
         ReturnValue invoke ( Args... args ) override { return t_ ( std::forward<Args> ( args )... ); }
         T t_;
