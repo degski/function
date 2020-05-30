@@ -105,36 +105,36 @@ class naive_function<ReturnValue ( Args... )> {
     public:
     template<typename T>
     naive_function & operator= ( T t ) {
-        callable_ = std::make_unique<CallableT<T>> ( t );
+        callable_ = std::make_unique<callable_type<T>> ( t );
         return *this;
     }
 
     ReturnValue operator( ) ( Args... args ) const {
         assert ( callable_ );
-        return callable_->Invoke ( args... );
+        return callable_->invoke ( args... );
     }
 
     private:
-    class ICallable {
+    class invoke_callable {
         public:
-        virtual ~ICallable ( )                 = default;
-        virtual ReturnValue Invoke ( Args... ) = 0;
+        virtual ~invoke_callable ( )                 = default;
+        virtual ReturnValue invoke ( Args... ) = 0;
     };
 
     template<typename T>
-    class CallableT : public ICallable {
+    class callable_type : public invoke_callable {
         public:
-        CallableT ( const T & t ) : t_ ( t ) {}
+        callable_type ( const T & t ) : t_ ( t ) {}
 
-        ~CallableT ( ) override = default;
+        ~callable_type ( ) override = default;
 
-        ReturnValue Invoke ( Args... args ) override { return t_ ( args... ); }
+        ReturnValue invoke ( Args... args ) override { return t_ ( args... ); }
 
         private:
         T t_;
     };
 
-    std::unique_ptr<ICallable> callable_;
+    std::unique_ptr<invoke_callable> callable_;
 };
 
 void function ( ) { std::cout << "function" << nl; }
