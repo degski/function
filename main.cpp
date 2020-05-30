@@ -115,7 +115,7 @@ struct naive_function<ReturnValue ( Args... )> {
     }
 
     struct invoke_callable {
-        virtual ~invoke_callable ( )           = default;
+        inline virtual ~invoke_callable ( )    = default;
         virtual ReturnValue invoke ( Args... ) = 0;
     };
 
