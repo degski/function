@@ -97,35 +97,53 @@ sax::Rng & rng = Rng::generator ( );
 
 // https://shaharmike.com/cpp/naive-std-function/
 
+namespace sax {
+
 template<typename T>
-struct naive_function;
+struct function;
 
 template<typename ReturnValue, typename... Args>
-struct naive_function<ReturnValue ( Args... )> {
+struct function<ReturnValue ( Args... )> {
 
     template<typename T>
-    [[maybe_unused]] naive_function & operator= ( T && t ) noexcept {
-        callable_ = std::make_unique<callable_type<T>> ( std::move ( t ) );
+    [[maybe_unused]] function & operator= ( T && t_ ) noexcept {
+        callable_ = std::make_unique<callable_type<T>> ( std::move ( t_ ) );
         return *this;
     }
 
-    [[nodiscard]] ReturnValue operator( ) ( Args &&... args ) const { return callable_->invoke ( std::forward<Args> ( args )... ); }
+    [[nodiscard]] ReturnValue operator( ) ( Args &&... args_ ) const {
+        return callable_->operator( ) ( std::forward<Args> ( args_ )... );
+    }
 
     struct invoke_callable {
-        inline virtual ~invoke_callable ( )    = default;
-        virtual ReturnValue invoke ( Args... ) = 0;
+        inline virtual ~invoke_callable ( )            = 0;
+        virtual ReturnValue operator( ) ( Args &&... ) = 0;
     };
 
     template<typename T>
     struct callable_type : public invoke_callable {
-        callable_type ( T && t ) : t_ ( std::move ( t ) ) {}
+        callable_type ( T && t_ ) noexcept : t ( std::move ( t_ ) ) {}
         ~callable_type ( ) override = default;
-        ReturnValue invoke ( Args &&... args ) override { return t_ ( std::forward<Args> ( args )... ); }
-        T t_;
+        virtual ReturnValue operator( ) ( Args &&... args ) override { return t ( std::forward<Args> ( args )... ); }
+        T t;
     };
+
+    template<typename U, typename... A>
+    void construct ( U * p_, A &&... args_ ) {
+        ::new ( p_ ) U ( std::forward<A> ( args_ )... );
+    }
+    template<typename U>
+    void destroy ( U * p_ ) noexcept {
+        p_->~U ( );
+    }
 
     std::unique_ptr<invoke_callable> callable_;
 };
+
+template<typename ReturnValue, typename... Args>
+inline function<ReturnValue ( Args... )>::invoke_callable::~invoke_callable ( ){ };
+
+} // namespace sax
 
 void function ( ) { std::cout << "function" << nl; }
 
@@ -135,7 +153,7 @@ struct functor {
 
 int main ( ) {
 
-    naive_function<void ( )> f;
+    sax::function<void ( )> f;
 
     f = function;
     f ( );
