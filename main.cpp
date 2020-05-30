@@ -98,39 +98,32 @@ sax::Rng & rng = Rng::generator ( );
 // https://shaharmike.com/cpp/naive-std-function/
 
 template<typename T>
-class naive_function;
+struct naive_function;
 
 template<typename ReturnValue, typename... Args>
-class naive_function<ReturnValue ( Args... )> {
-    public:
+struct naive_function<ReturnValue ( Args... )> {
+
     template<typename T>
-    naive_function & operator= ( T t ) {
-        callable_ = std::make_unique<callable_type<T>> ( t );
+    [[maybe_unused]] naive_function & operator= ( T && t ) noexcept {
+        callable_ = std::make_unique<callable_type<T>> ( std::forward<T> ( t ) );
         return *this;
     }
 
-    ReturnValue operator( ) ( Args... args ) const {
+    [[nodiscard]] ReturnValue operator( ) ( Args... args ) const {
         assert ( callable_ );
-        return callable_->invoke ( args... );
+        return callable_->invoke ( std::forward<Args> ( args )... );
     }
 
-    private:
-    class invoke_callable {
-        public:
-        virtual ~invoke_callable ( )                 = default;
+    struct invoke_callable {
+        virtual ~invoke_callable ( )           = default;
         virtual ReturnValue invoke ( Args... ) = 0;
     };
 
     template<typename T>
-    class callable_type : public invoke_callable {
-        public:
-        callable_type ( const T & t ) : t_ ( t ) {}
-
+    struct callable_type : public invoke_callable {
+        callable_type ( T const & t ) : t_ ( t ) {}
         ~callable_type ( ) override = default;
-
-        ReturnValue invoke ( Args... args ) override { return t_ ( args... ); }
-
-        private:
+        ReturnValue invoke ( Args... args ) override { return t_ ( std::forward<Args> ( args )... ); }
         T t_;
     };
 
